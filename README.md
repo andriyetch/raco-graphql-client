@@ -1,11 +1,8 @@
 # RA.co Event Fetcher
 
-A Node.js tool to fetch event data from the RA.co GraphQL API and save it as a JSON file. This tool accepts event area, start date, and end date as command-line arguments and saves the fetched events to a JSON file by default.
+A Node.js tool to fetch event data from the RA.co GraphQL API and save it as a JSON file. Accepts RA.co area ID, artist ID, start date, and/or end date as command-line arguments and saves the fetched events to a JSON file.
 
-## Requirements
-
-- Node.js 14.0.0 or higher
-- npm or yarn package manager
+Please use responsibly :) RA.co's GraphQL API is undocumented and not officially supported, don't throw thousands of requests at it in short periods - we don't want it to be thrown behind some kind of authentication.
 
 ## Installation
 
@@ -31,22 +28,22 @@ To fetch all events from today onwards:
 node eventFetcher.js
 ```
 
-To fetch events for area 13 from today onwards:
+To fetch events for an area (e.g. area ID 13 for London) from today onwards:
 
 ```bash
 node eventFetcher.js -r 13 -o events.json
 ```
 
-To fetch events for a specific artist (e.g., artist ID 44361 for Rival Consoles) from today onwards:
+To fetch events for a specific artist (e.g., artist ID 1013 for Seth Troxler) from today onwards:
 
 ```bash
-node eventFetcher.js -a 44361 -o artist_events.json
+node eventFetcher.js -a 1013 -o artist_events.json
 ```
 
 To fetch events for a specific artist in a specific area from today onwards:
 
 ```bash
-node eventFetcher.js -r 13 -a 44361 -o artist_area_events.json
+node eventFetcher.js -r 13 -a 1013 -o artist_area_events.json
 ```
 
 To fetch multiple pages of events (e.g., 5 pages):
@@ -65,7 +62,7 @@ node eventFetcher.js -r 13 -gte 2025-08-20
 node eventFetcher.js -r 13 -gte 2025-08-20 -lte 2025-08-25
 
 # Events for an artist in a date range
-node eventFetcher.js -a 44361 -gte 2025-08-20 -lte 2025-08-25
+node eventFetcher.js -a 1013 -gte 2025-08-20 -lte 2025-08-25
 ```
 
 Or using npm script:
@@ -100,3 +97,14 @@ The fetched events will be saved to the specified output file (JSON by default) 
 
 - `axios`: For making HTTP requests to the GraphQL API
 - `commander`: For parsing command-line arguments
+
+## How to find area IDs?
+
+- Navigate to the page of the location you want the ID for, e.g. https://ra.co/events/nl/utrecht and open Inspect Element.
+- Ctrl + F the contents of the HTML for "eventAreaId" or "eventsAreaId". Most times it'll show up here, certain locations don't work this way I don't really know why. Searching for a more consistent way of doing this.
+
+## How to find artist IDs?
+
+- Navigate to the page of the artist you want the ID for, e.g. https://ra.co/dj/sethtroxler and open browser Dev Tools.
+- Click on the Network tab in Dev Tools, filter by 'graphql', then on the webpage click on "Upcoming Events" or "Past Events".
+- You'll see a new graphql request appear in Dev Tools, open up the Response tab and you'll see the list of events loaded for the artist. In the meta data of each event you'll find the artist ID for any artists involved. 
