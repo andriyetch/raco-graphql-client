@@ -100,3 +100,14 @@ The fetched events will be saved to the specified output file (JSON by default) 
 
 - `axios`: For making HTTP requests to the GraphQL API
 - `commander`: For parsing command-line arguments
+
+## How to find area IDs?
+
+- Navigate to the page of the location you want the ID for, e.g. https://ra.co/events/nl/utrecht and open Inspect Element.
+- Ctrl + F the contents of the HTML for "eventAreaId" or "eventsAreaId". Most times it'll show up here, certain locations don't work this way I don't really know why. Searching for a more consistent way of doing this.
+
+## How to find artist IDs?
+
+- Navigate to the page of the artist you want the ID for, e.g. https://ra.co/dj/sethtroxler and open browser Dev Tools.
+- Click on the Network tab in Dev Tools, filter by 'graphql', then on the webpage click on "Upcoming Events" or "Past Events".
+- You'll see a new graphql request appear in Dev Tools, open up the Response tab and you'll see the list of events loaded for the artist. In the meta data of each event you'll find the artist ID for any artists involved. 
