@@ -1,0 +1,20 @@
+{
+  "name": "resident-advisor-events-scraper",
+  "version": "1.0.0",
+  "description": "A Node.js tool to fetch event data from the RA.co GraphQL API and save it as a JSON file",
+  "main": "eventFetcher.js",
+  "scripts": {
+    "start": "node eventFetcher.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["resident-advisor", "events", "scraper", "graphql"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "commander": "^11.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,37 @@
+{
+    "operationName": "GET_DEFAULT_EVENTS_LISTING",
+    "variables": {
+        "indices": [
+            "EVENT"
+        ],
+        "pageSize": 20,
+        "page": 1,
+        "aggregations": [
+            "YEAR",
+            "COUNTRY"
+        ],
+        "filters": [
+            {
+                "type": "ARTIST",
+                "value": "__ARTIST_ID__"
+            },
+            {
+                "type": "DATERANGE",
+                "value": "{\"gte\":\"__START_DATE__\",\"lte\":\"__END_DATE__\"}"
+            }
+        ],
+        "sortOrder": "ASCENDING",
+        "sortField": "EVENTDATE",
+        "baseFilters": [
+            {
+                "type": "ARTIST",
+                "value": "__ARTIST_ID__"
+            },
+            {
+                "type": "DATERANGE",
+                "value": "{\"gte\":\"__START_DATE__\",\"lte\":\"__END_DATE__\"}"
+            }
+        ]
+    },
+    "query": "query GET_DEFAULT_EVENTS_LISTING($indices: [IndexType!], $aggregations: [ListingAggregationType!], $filters: [FilterInput], $pageSize: Int, $page: Int, $sortField: FilterSortFieldType, $sortOrder: FilterSortOrderType, $baseFilters: [FilterInput]) {\n  listing(\n    indices: $indices\n    aggregations: []\n    filters: $filters\n    pageSize: $pageSize\n    page: $page\n    sortField: $sortField\n    sortOrder: $sortOrder\n  ) {\n    data {\n      ...eventFragment\n      __typename\n    }\n    totalResults\n    __typename\n  }\n  aggregations: listing(\n    indices: $indices\n    aggregations: $aggregations\n    filters: $baseFilters\n    pageSize: 0\n    sortField: $sortField\n    sortOrder: $sortOrder\n  ) {\n    aggregations {\n      type\n      values {\n        value\n        name\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment eventFragment on Event {\n  id\n  title\n  interestedCount\n  isSaved\n  isInterested\n  date\n  startTime\n  contentUrl\n  queueItEnabled\n  flyerFront\n  newEventForm\n  images {\n    id\n    filename\n    alt\n    type\n    crop\n    __typename\n  }\n  artists {\n    id\n    name\n    __typename\n  }\n  venue {\n    id\n    name\n    contentUrl\n    live\n    area {\n      id\n      name\n      urlName\n      country {\n        id\n        name\n        urlCode\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  pick {\n    id\n    blurb\n    __typename\n  }\n  __typename\n}\n"
+}
