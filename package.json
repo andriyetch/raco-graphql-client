@@ -5,6 +5,8 @@
   "main": "eventFetcher.js",
   "scripts": {
     "start": "node eventFetcher.js",
+    "server": "node server.js",
+    "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["resident-advisor", "events", "scraper", "graphql"],
@@ -12,7 +14,15 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1",
+    "pushover-notifications": "^1.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   },
   "engines": {
     "node": ">=14.0.0"

@@ -52,4 +52,4 @@ events.json
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+Thumbs.db*.db
