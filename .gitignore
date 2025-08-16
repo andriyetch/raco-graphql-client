@@ -53,3 +53,11 @@ events.json
 .Trashes
 ehthumbs.db
 Thumbs.db*.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
