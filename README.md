@@ -31,22 +31,22 @@ To fetch all events from today onwards:
 node eventFetcher.js
 ```
 
-To fetch events for area 13 from today onwards:
+To fetch events for an area (e.g. area ID 13 for London) from today onwards:
 
 ```bash
 node eventFetcher.js -r 13 -o events.json
 ```
 
-To fetch events for a specific artist (e.g., artist ID 44361 for Rival Consoles) from today onwards:
+To fetch events for a specific artist (e.g., artist ID 1013 for Seth Troxler) from today onwards:
 
 ```bash
-node eventFetcher.js -a 44361 -o artist_events.json
+node eventFetcher.js -a 1013 -o artist_events.json
 ```
 
 To fetch events for a specific artist in a specific area from today onwards:
 
 ```bash
-node eventFetcher.js -r 13 -a 44361 -o artist_area_events.json
+node eventFetcher.js -r 13 -a 1013 -o artist_area_events.json
 ```
 
 To fetch multiple pages of events (e.g., 5 pages):
@@ -65,7 +65,7 @@ node eventFetcher.js -r 13 -gte 2025-08-20
 node eventFetcher.js -r 13 -gte 2025-08-20 -lte 2025-08-25
 
 # Events for an artist in a date range
-node eventFetcher.js -a 44361 -gte 2025-08-20 -lte 2025-08-25
+node eventFetcher.js -a 1013 -gte 2025-08-20 -lte 2025-08-25
 ```
 
 Or using npm script:
