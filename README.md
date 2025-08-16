@@ -2,7 +2,7 @@
 
 A Node.js tool to fetch event data from the RA.co GraphQL API and save it as a JSON file. Accepts RA.co area ID, artist ID, start date, and/or end date as command-line arguments and saves the fetched events to a JSON file.
 
-Please use responsibly :) RA.co's GraphQL API is undocumented and not officially supported, don't throw thousands of requests at it in short periods - we don't want them changing it or putting it behind authentication.
+Please use responsibly :) RA.co's GraphQL API is undocumented and not officially supported, don't throw thousands of requests at it in short periods - we don't want it to be thrown behind some kind of authentication.
 
 ## Installation
 
