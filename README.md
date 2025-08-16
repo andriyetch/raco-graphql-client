@@ -14,7 +14,7 @@ Please use responsibly :) RA.co's GraphQL API is undocumented and not officially
 ### Options
 
 - `-r, --area <id>`: (Optional) The area code to filter events.
-- `-a, --artist <id>`: (Optional) The artist ID to filter events by a specific artist.
+- `-a, --artist <ids>`: (Optional) The artist ID(s) to filter events. Can be a single ID or comma-separated list of IDs (e.g., "1013,44361,789").
 - `-p, --pages <number>`: (Optional) Number of pages to fetch (default: 1).
 - `-gte, --gte <date>`: (Optional) Start date for events (format: YYYY-MM-DD, default: today).
 - `-lte, --lte <date>`: (Optional) End date for events (format: YYYY-MM-DD).
@@ -40,10 +40,22 @@ To fetch events for a specific artist (e.g., artist ID 1013 for Seth Troxler) fr
 node eventFetcher.js -a 1013 -o artist_events.json
 ```
 
+To fetch events for multiple artists (e.g., artist IDs 1013, 44361, and 789) from today onwards:
+
+```bash
+node eventFetcher.js -a "1013,44361,789" -o multiple_artists_events.json
+```
+
 To fetch events for a specific artist in a specific area from today onwards:
 
 ```bash
 node eventFetcher.js -r 13 -a 1013 -o artist_area_events.json
+```
+
+To fetch events for multiple artists in a specific area from today onwards:
+
+```bash
+node eventFetcher.js -r 13 -a "1013,44361" -o multiple_artists_area_events.json
 ```
 
 To fetch multiple pages of events (e.g., 5 pages):
@@ -63,6 +75,9 @@ node eventFetcher.js -r 13 -gte 2025-08-20 -lte 2025-08-25
 
 # Events for an artist in a date range
 node eventFetcher.js -a 1013 -gte 2025-08-20 -lte 2025-08-25
+
+# Events for multiple artists in a date range
+node eventFetcher.js -a "1013,44361" -gte 2025-08-20 -lte 2025-08-25
 ```
 
 Or using npm script:
@@ -85,11 +100,12 @@ The fetched events will be saved to the specified output file (JSON by default) 
 ## Features
 
 - **Dual Filtering**: Search by area code OR artist ID
-- **Combined Filtering**: Search by artist globally, then filter by area
+- **Multi-Artist Support**: Search by multiple artists using comma-separated IDs
+- **Combined Filtering**: Search by artist(s) globally, then filter by area
 - **Flexible Date Ranges**: Default to current day onwards, with custom date options
 - **Pagination Control**: Fetch single page by default, or specify multiple pages
 - **Rich JSON Output**: Comprehensive event data with metadata
-- **Rate Limiting**: Includes a 1-second delay between requests to be respectful to the API
+- **Rate Limiting**: Includes delays between requests to be respectful to the API
 - **Error Handling**: Gracefully handles API errors and continues processing
 - **Command Line Interface**: Easy-to-use CLI with argument parsing
 

@@ -75,7 +75,7 @@ class EventFetcher {
             }
         }
 
-        console.log('Generated payload variables:', payload.variables);
+        // console.log('Generated payload variables:', payload.variables);
         return payload;
     }
 
@@ -207,7 +207,7 @@ class EventFetcher {
      * @param {Array} events - A list of events.
      * @param {string} outputFile - The output file path. (default: "events.json")
      * @param {number} areaFilter - Optional area ID to filter events.
-     * @param {number} artistFilter - Optional artist ID to filter events.
+     * @param {string|number} artistFilter - Optional artist ID(s) to filter events. Can be single ID or comma-separated list.
      */
     async saveEventsToJson(events, outputFile = "events.json", areaFilter = null, artistFilter = null) {
         const records = events.map(event => {
@@ -250,7 +250,7 @@ class EventFetcher {
                 generatedAt: new Date().toISOString(),
                 queryInfo: {
                     area: this.payload.variables.filters?.areas?.eq || null,
-                    artist: this.payload.variables.filters?.artist?.eq || 
+                    artist: artistFilter || this.payload.variables.filters?.artist?.eq || 
                            (Array.isArray(this.payload.variables.filters) ? 
                             this.payload.variables.filters.find(f => f.type === 'ARTIST')?.value : null) || null,
                     dateRange: {
@@ -289,7 +289,7 @@ async function main() {
         .name('event-fetcher')
         .description('Fetch events from ra.co and save them to a JSON file.') 
         .option('-r, --area <id>', 'The area code to filter events (optional).', parseInt)
-        .option('-a, --artist <id>', 'The artist ID to filter events (optional).', parseInt)
+        .option('-a, --artist <ids>', 'The artist ID(s) to filter events (optional). Can be a single ID or comma-separated list of IDs.')
         .option('-p, --pages <number>', 'Number of pages to fetch (default: 1).', parseInt)
         .option('-gte, --gte <date>', 'Start date for events (format: YYYY-MM-DD, default: today).')
         .option('-lte, --lte <date>', 'End date for events (format: YYYY-MM-DD, optional).')
@@ -310,16 +310,52 @@ async function main() {
         options.lte + 'T23:59:59.999Z' : 
         null;
 
-    // Use 0 as default for area and artist if not provided
+    // Parse artist IDs - can be single ID or comma-separated list
+    let artistIds = [];
+    if (options.artist) {
+        artistIds = options.artist.split(',').map(id => id.trim()).filter(id => id.length > 0);
+    }
+
     const areaId = options.area || 0;
-    const artistId = options.artist || 0;
     const maxPages = options.pages || 1;
-    const eventFetcher = new EventFetcher(areaId, artistId, listingDateGte, listingDateLte);
+    
+    let allEvents = [];
+    let totalEventsFetched = 0;
 
-    // Fetch events with page limit
-    let allEvents = await eventFetcher.fetchEventsWithPageLimit(maxPages);
-
-    await eventFetcher.saveEventsToJson(allEvents, options.output, options.area, options.artist);
+    if (artistIds.length > 0) {
+        // Fetch events for each artist individually
+        console.log(`Fetching events for ${artistIds.length} artist(s): ${artistIds.join(', ')}`);
+        
+        for (let i = 0; i < artistIds.length; i++) {
+            const artistId = artistIds[i];
+            console.log(`\n[${i + 1}/${artistIds.length}] Fetching events for artist ID: ${artistId}`);
+            
+            const eventFetcher = new EventFetcher(areaId, artistId, listingDateGte, listingDateLte);
+            const artistEvents = await eventFetcher.fetchEventsWithPageLimit(maxPages);
+            
+            console.log(`Found ${artistEvents.length} events for artist ${artistId}`);
+            allEvents.push(...artistEvents);
+            totalEventsFetched += artistEvents.length;
+            
+            // Add a small delay between artist queries to be respectful to the API
+            if (i < artistIds.length - 1) {
+                console.log('Waiting 2 seconds before next artist query...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        console.log(`\nTotal events fetched across all artists: ${totalEventsFetched}`);
+        
+        // Create a combined event fetcher for saving (using the first artist's configuration)
+        const combinedEventFetcher = new EventFetcher(areaId, artistIds[0], listingDateGte, listingDateLte);
+        await combinedEventFetcher.saveEventsToJson(allEvents, options.output, options.area, artistIds.join(','));
+        
+    } else {
+        // Original behavior for area-based queries or no artist specified
+        const eventFetcher = new EventFetcher(areaId, 0, listingDateGte, listingDateLte);
+        allEvents = await eventFetcher.fetchEventsWithPageLimit(maxPages);
+        await eventFetcher.saveEventsToJson(allEvents, options.output, options.area, null);
+    }
 }
 
 // Run the main function if this file is executed directly

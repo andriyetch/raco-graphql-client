@@ -45,6 +45,41 @@ async function example() {
             console.log('No events found for the specified artist and date range');
         }
 
+        // Example 2.5: Multi-artist filtering
+        console.log('\nExample 2.5: Multi-artist filtering for Rival Consoles and Seth Troxler...\n');
+        const artistIds = ['44361', '1013']; // Rival Consoles and Seth Troxler
+        let allMultiArtistEvents = [];
+        
+        for (let i = 0; i < artistIds.length; i++) {
+            const artistId = artistIds[i];
+            console.log(`[${i + 1}/${artistIds.length}] Fetching events for artist ID: ${artistId}`);
+            
+            const multiArtistEventFetcher = new EventFetcher(
+                0, // No area filter for artist queries
+                artistId, // Artist ID
+                todayGte, // Current day onwards
+                null  // No end date limit
+            );
+            
+            const multiArtistEvents = await multiArtistEventFetcher.fetchEventsWithPageLimit(1);
+            console.log(`Found ${multiArtistEvents.length} events for artist ${artistId}`);
+            allMultiArtistEvents.push(...multiArtistEvents);
+            
+            // Add delay between requests
+            if (i < artistIds.length - 1) {
+                console.log('Waiting 2 seconds before next artist query...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        if (allMultiArtistEvents.length > 0) {
+            const combinedEventFetcher = new EventFetcher(0, artistIds[0], todayGte, null);
+            await combinedEventFetcher.saveEventsToJson(allMultiArtistEvents, 'example_multi_artist_events.json', null, artistIds.join(','));
+            console.log(`Successfully saved ${allMultiArtistEvents.length} multi-artist events to example_multi_artist_events.json`);
+        } else {
+            console.log('No events found for the specified artists and date range');
+        }
+
         // Example 3: Multiple pages
         console.log('\nExample 3: Fetching multiple pages...\n');
         const multiPageEventFetcher = new EventFetcher(
