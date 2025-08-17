@@ -526,7 +526,7 @@ class EventServer {
         <!-- Right Panel - Events List -->
         <div class="right-panel">
             <div class="events-header">
-                <h2>📅 Recent Events</h2>
+                <h2>📅 Upcoming Events</h2>
             </div>
             <div class="events-list" id="eventsList">
                 <div class="loading">Loading events...</div>
@@ -619,10 +619,20 @@ class EventServer {
                     body: JSON.stringify({ name, id })
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
+                    // Clear the form
+                    document.getElementById('newArtistName').value = '';
+                    document.getElementById('newArtistId').value = '';
+                    
+                    // Show success message
+                    alert(\`Artist added successfully! Total artists: \${result.totalArtists}\`);
+                    
+                    // Reload the page to show the new artist
                     location.reload();
                 } else {
-                    alert('Error adding artist');
+                    alert('Error adding artist: ' + result.error);
                 }
             } catch (error) {
                 alert('Error adding artist: ' + error.message);
@@ -709,7 +719,7 @@ class EventServer {
         });
 
         // Add artist endpoint
-        this.app.post('/api/artists', (req, res) => {
+        this.app.post('/api/artists', async (req, res) => {
             try {
                 const { name, id } = req.body;
                 
@@ -717,9 +727,35 @@ class EventServer {
                     return res.status(400).json({ error: 'Name and ID are required' });
                 }
                 
-                // For now, just return success (we'll implement config file updates later)
-                res.json({ message: 'Artist added successfully', artist: { name, id } });
+                // Check if artist already exists
+                const existingArtist = this.monitor.config.artists.find(artist => 
+                    artist.id === id || artist.name.toLowerCase() === name.toLowerCase()
+                );
+                
+                if (existingArtist) {
+                    return res.status(400).json({ 
+                        error: `Artist already exists: ${existingArtist.name} (ID: ${existingArtist.id})` 
+                    });
+                }
+                
+                // Add new artist to config
+                const newArtist = { id, name };
+                this.monitor.config.artists.push(newArtist);
+                
+                // Save updated config to file
+                const fs = require('fs');
+                const configPath = './config.json';
+                await fs.promises.writeFile(configPath, JSON.stringify(this.monitor.config, null, 2));
+                
+                console.log(`✅ Added new artist: ${name} (ID: ${id})`);
+                
+                res.json({ 
+                    message: 'Artist added successfully', 
+                    artist: newArtist,
+                    totalArtists: this.monitor.config.artists.length
+                });
             } catch (error) {
+                console.error('Error adding artist:', error);
                 res.status(500).json({ error: error.message });
             }
         });
