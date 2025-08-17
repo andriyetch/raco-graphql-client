@@ -41,24 +41,10 @@ fi
 echo "📦 Installing SQLite..."
 sudo apt install -y sqlite3
 
-# Create application directory
-if [[ $EUID -eq 0 ]]; then
-    APP_DIR="/root/ra-event-monitor"
-else
-    APP_DIR="$HOME/ra-event-monitor"
-fi
-
-echo "📁 Setting up application directory: $APP_DIR"
-
-if [ ! -d "$APP_DIR" ]; then
-    mkdir -p "$APP_DIR"
-fi
-
-cd "$APP_DIR"
-
-# Copy application files (assuming they're in the current directory)
-echo "📋 Copying application files..."
-cp -r . "$APP_DIR/"
+# Use current directory for application
+APP_DIR="$(pwd)"
+echo "📁 Using current directory: $APP_DIR"
+echo "📋 Application files are already in place"
 
 # Install dependencies
 echo "📦 Installing Node.js dependencies..."
@@ -107,7 +93,7 @@ fi
 
 # Setup PM2
 echo "⚙️  Setting up PM2..."
-pm2 start server.js --name "ra-event-monitor"
+pm2 start server.js --name "ra-event-monitor" --cwd "$APP_DIR"
 pm2 save
 pm2 startup
 
@@ -137,4 +123,5 @@ echo "📈 Monitoring:"
 echo "   pm2 monit                     # Real-time monitoring (if using PM2)"
 echo "   tail -f ~/.pm2/logs/ra-event-monitor-out.log  # Application logs (if using PM2)"
 echo ""
+echo "📁 Application location: $APP_DIR"
 echo "✅ Your RA.co Event Monitor is now ready to run!"
