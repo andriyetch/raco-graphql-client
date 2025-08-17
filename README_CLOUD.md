@@ -97,7 +97,7 @@ To find area IDs on RA.co:
 
 ## 🚀 Running the Server
 
-### Development Mode
+### Development Mode (with auto-restart)
 ```bash
 npm run dev
 ```
@@ -107,6 +107,11 @@ npm run dev
 npm run server
 ```
 
+### Direct Node.js
+```bash
+node server.js
+```
+
 ### Using PM2 (Recommended for Production)
 ```bash
 npm install -g pm2
@@ -114,6 +119,8 @@ pm2 start server.js --name "ra-event-monitor"
 pm2 save
 pm2 startup
 ```
+
+**Note**: The `./deploy.sh` script is for **initial server setup only**, not for running the server. Use the npm scripts above for running the application.
 
 ## 📊 Web Dashboard
 
@@ -236,6 +243,11 @@ pm2 save
 pm2 startup
 ```
 
+**Alternative**: You can also use npm scripts with PM2:
+```bash
+pm2 start npm --name "ra-event-monitor" -- run server
+```
+
 ### 4. Nginx Reverse Proxy (Optional)
 ```nginx
 server {
@@ -304,7 +316,11 @@ Set `NODE_ENV=development` in `.env` for more verbose logging.
 ### Adding/Removing Artists
 Edit `config.json` and restart the server:
 ```bash
+# If using PM2
 pm2 restart ra-event-monitor
+
+# If using npm scripts
+npm run server  # Stop current process (Ctrl+C) then restart
 ```
 
 ### Changing Location
@@ -312,6 +328,9 @@ Update the `areaId` in `config.json` and restart.
 
 ### Modifying Check Interval
 Update `checkIntervalHours` in `config.json` and restart.
+
+### Reloading Configuration
+The server automatically reloads configuration on restart, so any changes to `config.json` or `.env` require a restart.
 
 ## 📈 Scaling Considerations
 

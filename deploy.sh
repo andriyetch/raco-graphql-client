@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# RA.co Event Monitor Deployment Script
+# RA.co Event Monitor - Initial Server Setup Script
 # This script sets up the event monitor on a fresh Ubuntu server
+# 
+# IMPORTANT: This script is for INITIAL SETUP ONLY.
+# After running this script, use 'npm run server' to run the application.
 
 set -e
 
@@ -105,13 +108,18 @@ pm2 save
 pm2 startup
 
 echo ""
-echo "🎉 Deployment completed!"
-echo "========================"
+echo "🎉 Initial setup completed!"
+echo "==========================="
 echo ""
 echo "📊 Dashboard: http://$(hostname -I | awk '{print $1}'):3000"
 echo "🔍 Health Check: http://$(hostname -I | awk '{print $1}'):3000/health"
 echo ""
-echo "📱 PM2 Commands:"
+echo "🚀 To run the server:"
+echo "   npm run server               # Production mode"
+echo "   npm run dev                  # Development mode with auto-restart"
+echo "   node server.js               # Direct execution"
+echo ""
+echo "📱 PM2 Commands (if using PM2):"
 echo "   pm2 status                    # Check status"
 echo "   pm2 logs ra-event-monitor     # View logs"
 echo "   pm2 restart ra-event-monitor  # Restart service"
@@ -122,7 +130,7 @@ echo "   Edit config.json to change artists/location"
 echo "   Edit .env to change Pushover settings"
 echo ""
 echo "📈 Monitoring:"
-echo "   pm2 monit                     # Real-time monitoring"
-echo "   tail -f ~/.pm2/logs/ra-event-monitor-out.log  # Application logs"
+echo "   pm2 monit                     # Real-time monitoring (if using PM2)"
+echo "   tail -f ~/.pm2/logs/ra-event-monitor-out.log  # Application logs (if using PM2)"
 echo ""
-echo "✅ Your RA.co Event Monitor is now running!"
+echo "✅ Your RA.co Event Monitor is now ready to run!"

@@ -11,7 +11,11 @@ Please use responsibly :) RA.co's GraphQL API is undocumented and not officially
 
 ## Usage
 
-### Options
+### CLI Tool (One-time queries)
+
+This is the original command-line tool for one-time event queries.
+
+#### Options
 
 - `-r, --area <id>`: (Optional) The area code to filter events.
 - `-a, --artist <ids>`: (Optional) The artist ID(s) to filter events. Can be a single ID or comma-separated list of IDs (e.g., "1013,44361,789").
@@ -86,6 +90,20 @@ Or using npm script:
 npm start -- -r 13 -o events.json
 ```
 
+### Cloud Server (Automated monitoring)
+
+For continuous monitoring with push notifications, use the cloud server version:
+
+```bash
+# Run the cloud server
+npm run server
+
+# Or for development
+npm run dev
+```
+
+See [README_CLOUD.md](README_CLOUD.md) for full cloud server documentation.
+
 ## Output
 
 The fetched events will be saved to the specified output file (JSON by default) with comprehensive event data including:
@@ -108,6 +126,34 @@ The fetched events will be saved to the specified output file (JSON by default) 
 - **Rate Limiting**: Includes delays between requests to be respectful to the API
 - **Error Handling**: Gracefully handles API errors and continues processing
 - **Command Line Interface**: Easy-to-use CLI with argument parsing
+
+## 🚀 Cloud Server Version
+
+This project also includes a **cloud server version** with automated monitoring and push notifications! See [README_CLOUD.md](README_CLOUD.md) for details.
+
+### Cloud Server Features:
+- **Automated Monitoring**: Runs every 3 hours to check for new events
+- **Push Notifications**: Sends notifications to your phone via Pushover
+- **Web Dashboard**: Beautiful web interface for monitoring and manual controls
+- **SQLite Database**: Prevents duplicate notifications
+- **REST API**: Full API for integration with other services
+
+### Quick Start (Cloud Server):
+```bash
+# Install dependencies
+npm install
+
+# Configure environment and artists
+cp env.example .env
+# Edit .env with your Pushover credentials
+# Edit config.json with your artists and location
+
+# Run the server
+npm run server
+
+# Or for development with auto-restart
+npm run dev
+```
 
 ## Dependencies
 
