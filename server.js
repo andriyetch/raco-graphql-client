@@ -92,12 +92,23 @@ class EventServer {
             }
         });
 
-        // Manual trigger endpoint
+        // Manual trigger endpoint (normal - only new events)
         this.app.post('/api/check-events', async (req, res) => {
             try {
                 console.log('🔄 Manual event check triggered via API');
                 await this.monitor.checkForNewEvents();
                 res.json({ message: 'Event check completed' });
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        // Manual trigger endpoint (force - all events)
+        this.app.post('/api/check-events-force', async (req, res) => {
+            try {
+                console.log('🔄 Force manual event check triggered via API (will notify for all events)');
+                await this.monitor.checkForNewEventsManual();
+                res.json({ message: 'Force event check completed - notifications sent for all events' });
             } catch (error) {
                 res.status(500).json({ error: error.message });
             }

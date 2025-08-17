@@ -249,6 +249,9 @@
                 <button class="btn btn-primary" onclick="checkEvents()">
                     🔍 Check Events Now
                 </button>
+                <button class="btn btn-secondary" onclick="checkEventsForce()">
+                    ⚡ Force Check (Notify All)
+                </button>
                 <a href="/api/events" class="btn btn-secondary" target="_blank">
                     📊 View Events API
                 </a>
@@ -305,6 +308,39 @@
             status.textContent = message;
             status.className = `status ${type}`;
             status.style.display = 'block';
+        }
+        
+        async function checkEventsForce() {
+            const loading = document.getElementById('loading');
+            const status = document.getElementById('status');
+            
+            loading.style.display = 'block';
+            status.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/check-events-force', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Force event check completed! Notifications sent for all events.', 'success');
+                    // Refresh stats after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showStatus('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
         }
     </script>
 </body>

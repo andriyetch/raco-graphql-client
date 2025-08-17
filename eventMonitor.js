@@ -142,6 +142,96 @@ class EventMonitor {
         console.log('🔍 Event check completed\n');
     }
 
+    async checkForNewEventsManual() {
+        console.log('🔍 Starting MANUAL event check (will notify for all events)...');
+        console.log(`Location: ${this.config.location.name} (ID: ${this.config.location.areaId})`);
+        console.log(`Artists: ${this.config.artists.map(a => a.name).join(', ')}`);
+        
+        const dateRange = this.getDateRange();
+        console.log(`Date range: ${dateRange.start} to ${dateRange.end}`);
+        
+        const artistIds = this.config.artists.map(artist => artist.id);
+        let allEvents = [];
+        
+        // Check each artist individually
+        for (let i = 0; i < artistIds.length; i++) {
+            const artistId = artistIds[i];
+            const artistName = this.config.artists.find(a => a.id === artistId).name;
+            
+            console.log(`\n[${i + 1}/${artistIds.length}] Checking events for ${artistName} (ID: ${artistId})`);
+            
+            try {
+                const eventFetcher = new EventFetcher(
+                    this.config.location.areaId,
+                    artistId,
+                    dateRange.start,
+                    dateRange.end
+                );
+                
+                const events = await eventFetcher.fetchEventsWithPageLimit(5); // Fetch up to 5 pages
+                console.log(`Found ${events.length} events for ${artistName}`);
+                
+                // Save events to database
+                for (const event of events) {
+                    await this.db.saveEvent(event);
+                }
+                
+                // Get ALL events for this artist (not just new ones)
+                const artistEvents = await this.db.getEventsByDateRange(dateRange.start, dateRange.end);
+                const filteredEvents = artistEvents.filter(event => {
+                    // Check if this event has artists that match our artist ID
+                    const eventArtists = event.artist_names ? event.artist_names.split(',') : [];
+                    return eventArtists.some(artistName => 
+                        this.config.artists.some(configArtist => 
+                            configArtist.id === artistId && 
+                            configArtist.name.toLowerCase().includes(artistName.trim().toLowerCase())
+                        )
+                    );
+                });
+                
+                if (filteredEvents.length > 0) {
+                    console.log(`Found ${filteredEvents.length} events for ${artistName} (including previously notified)`);
+                    allEvents.push(...filteredEvents);
+                }
+                
+                // Add delay between artist queries
+                if (i < artistIds.length - 1) {
+                    console.log('Waiting 2 seconds before next artist...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+                
+            } catch (error) {
+                console.error(`Error checking events for ${artistName}:`, error.message);
+            }
+        }
+        
+        // Send notifications for ALL events found
+        if (allEvents.length > 0 && this.notificationService) {
+            console.log(`\n📱 Sending notifications for ${allEvents.length} events (manual run)`);
+            
+            try {
+                // Send batch notification
+                await this.notificationService.sendBatchNotification(allEvents);
+                
+                // Mark events as notified (even if they were notified before)
+                for (const event of allEvents) {
+                    await this.db.markNotificationSent(event.id, 'Manual notification sent');
+                }
+                
+                console.log('✅ Manual notifications sent successfully');
+                
+            } catch (error) {
+                console.error('Error sending manual notifications:', error.message);
+            }
+        } else if (allEvents.length > 0) {
+            console.log(`\n⚠️  Found ${allEvents.length} events but notifications are disabled`);
+        } else {
+            console.log('\n✅ No events found');
+        }
+        
+        console.log('🔍 Manual event check completed\n');
+    }
+
     async getStats() {
         const totalEvents = await this.db.get('SELECT COUNT(*) as count FROM events');
         const totalNotifications = await this.db.get('SELECT COUNT(*) as count FROM notifications');
