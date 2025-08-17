@@ -72,18 +72,29 @@ class EventServer {
                 const startDate = start || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
                 const endDate = end || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
                 
+                console.log('API /api/events called with:', { startDate, endDate, artists });
+                
                 let events;
                 if (artists) {
                     // Filter by selected artists and location
                     const artistIds = artists.split(',');
+                    console.log('Filtering by artists:', artistIds, 'and location:', this.monitor.config.location.areaId);
                     events = await this.db.getEventsByDateRangeAndArtists(startDate, endDate, artistIds, this.monitor.config.location.areaId);
                 } else {
                     // Get all events (for backward compatibility)
                     events = await this.db.getEventsByDateRange(startDate, endDate);
                 }
                 
+                // Ensure events is always an array
+                if (!Array.isArray(events)) {
+                    console.error('Database returned non-array:', events);
+                    events = [];
+                }
+                
+                console.log('Returning events:', events.length);
                 res.json(events);
             } catch (error) {
+                console.error('Error in /api/events:', error);
                 res.status(500).json({ error: error.message });
             }
         });
@@ -541,11 +552,23 @@ class EventServer {
                 }
                 
                 const response = await fetch(\`/api/events?\${params.toString()}\`);
+                
+                if (!response.ok) {
+                    throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+                }
+                
                 const events = await response.json();
                 
                 console.log('Loaded events for artists:', selectedArtists, 'Events:', events);
                 
-                if (!events || events.length === 0) {
+                // Ensure events is an array
+                if (!Array.isArray(events)) {
+                    console.error('API returned non-array:', events);
+                    eventsList.innerHTML = '<div class="no-events">Error: Invalid response format</div>';
+                    return;
+                }
+                
+                if (events.length === 0) {
                     eventsList.innerHTML = '<div class="no-events">No events found for selected artists</div>';
                     return;
                 }

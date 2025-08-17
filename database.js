@@ -174,7 +174,8 @@ class Database {
     }
 
     async getEventsByDateRangeAndArtists(startDate, endDate, artistIds, areaId) {
-        const sql = `
+        // First try with venue_area_id column
+        let sql = `
             SELECT e.*, GROUP_CONCAT(ea.artist_name) as artist_names
             FROM events e
             INNER JOIN event_artists ea ON e.id = ea.event_id
@@ -185,8 +186,36 @@ class Database {
             ORDER BY e.date ASC
         `;
         
-        const params = [startDate, endDate, ...artistIds, areaId];
-        return await this.all(sql, params);
+        let params = [startDate, endDate, ...artistIds, areaId];
+        console.log('Database query (with venue_area_id):', sql);
+        console.log('Database params:', params);
+        
+        try {
+            const result = await this.all(sql, params);
+            console.log('Database result:', result);
+            return result;
+        } catch (error) {
+            console.log('Venue area filtering failed, falling back to artist-only filtering:', error.message);
+            
+            // Fallback: filter by artists only (for backward compatibility)
+            sql = `
+                SELECT e.*, GROUP_CONCAT(ea.artist_name) as artist_names
+                FROM events e
+                INNER JOIN event_artists ea ON e.id = ea.event_id
+                WHERE e.date BETWEEN ? AND ?
+                AND ea.artist_id IN (${artistIds.map(() => '?').join(',')})
+                GROUP BY e.id
+                ORDER BY e.date ASC
+            `;
+            
+            params = [startDate, endDate, ...artistIds];
+            console.log('Fallback database query:', sql);
+            console.log('Fallback database params:', params);
+            
+            const fallbackResult = await this.all(sql, params);
+            console.log('Fallback database result:', fallbackResult);
+            return fallbackResult;
+        }
     }
 
     async hasNotificationBeenSent(eventId) {
