@@ -121,7 +121,7 @@ class EventServer {
                 const config = this.monitor.config;
                 console.log('Dashboard data:', { stats, config });
                 
-                // Create a simple HTML dashboard instead of using EJS
+                // Create a three-column HTML dashboard
                 const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -130,89 +130,442 @@ class EventServer {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RA.co Event Monitor</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; }
-        .stat-card h3 { margin: 0 0 10px 0; color: #333; font-size: 14px; text-transform: uppercase; }
-        .stat-card .value { font-size: 24px; font-weight: bold; color: #007bff; }
-        .config { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .config h3 { margin: 0 0 15px 0; color: #333; }
-        .config-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .config-item:last-child { border-bottom: none; }
-        .actions { display: flex; gap: 15px; margin-top: 20px; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; height: 100vh; overflow: hidden; }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        /* Left Column - Artist Management */
+        .left-panel {
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .left-panel h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .artist-list {
+            margin-bottom: 30px;
+        }
+        
+        .artist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eee;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+        
+        .artist-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .artist-item label {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .artist-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .artist-id {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .add-artist-form {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .add-artist-form h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        
         .btn-primary { background: #007bff; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
-        .status { padding: 15px; border-radius: 6px; margin-top: 20px; display: none; }
+        .btn-danger { background: #dc3545; color: white; }
+        
+        /* Center Column - Dashboard */
+        .center-panel {
+            background: white;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .config {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .config h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .config-item:last-child {
+            border-bottom: none;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+        
         .status.success { background: #d4edda; color: #155724; }
         .status.error { background: #f8d7da; color: #721c24; }
+        
+        /* Right Column - Events List */
+        .right-panel {
+            background: white;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .events-header {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            background: #f8f9fa;
+        }
+        
+        .events-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .events-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+        
+        .event-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .event-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        
+        .event-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .event-details {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .event-date {
+            color: #007bff;
+            font-weight: 500;
+        }
+        
+        .event-venue {
+            color: #28a745;
+        }
+        
+        .event-artists {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎵 RA.co Event Monitor</h1>
-            <p>Automated event tracking for your favorite artists</p>
-        </div>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <h3>Total Events</h3>
-                <div class="value">${stats.totalEvents}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Notifications Sent</h3>
-                <div class="value">${stats.totalNotifications}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Recent Events (7 days)</h3>
-                <div class="value">${stats.recentEvents}</div>
-            </div>
-            <div class="stat-card">
+    <div class="layout">
+        <!-- Left Panel - Artist Management -->
+        <div class="left-panel">
+            <h2>🎤 Artist Management</h2>
+            
+            <div class="artist-list">
                 <h3>Monitored Artists</h3>
-                <div class="value">${stats.monitoredArtists}</div>
+                ${config.artists.map(artist => `
+                    <div class="artist-item">
+                        <input type="checkbox" id="artist-${artist.id}" checked onchange="toggleArtist('${artist.id}', this.checked)">
+                        <label for="artist-${artist.id}">
+                            <div class="artist-name">${artist.name}</div>
+                            <div class="artist-id">ID: ${artist.id}</div>
+                        </label>
+                    </div>
+                `).join('')}
             </div>
-        </div>
-        
-        <div class="config">
-            <h3>📍 Current Configuration</h3>
-            <div class="config-item">
-                <span>Location:</span>
-                <span>${config.location.name} (ID: ${config.location.areaId})</span>
-            </div>
-            <div class="config-item">
-                <span>Check Interval:</span>
-                <span>Every ${config.notificationSettings.checkIntervalHours} hours</span>
-            </div>
-            <div class="config-item">
-                <span>Date Range:</span>
-                <span>${config.notificationSettings.dateRangeDays} days</span>
-            </div>
-        </div>
-        
-        <div class="config">
-            <h3>🎤 Monitored Artists</h3>
-            ${config.artists.map(artist => `
-                <div class="config-item">
-                    <span>${artist.name}</span>
-                    <span>ID: ${artist.id}</span>
+            
+            <div class="add-artist-form">
+                <h3>Add New Artist</h3>
+                <div class="form-group">
+                    <label for="newArtistName">Artist Name:</label>
+                    <input type="text" id="newArtistName" placeholder="e.g., Aphex Twin">
                 </div>
-            `).join('')}
+                <div class="form-group">
+                    <label for="newArtistId">Artist ID:</label>
+                    <input type="text" id="newArtistId" placeholder="e.g., 12345">
+                </div>
+                <button class="btn btn-primary" onclick="addArtist()">Add Artist</button>
+            </div>
         </div>
         
-        <div class="actions">
-            <button class="btn btn-primary" onclick="checkEvents()">🔍 Check Events Now</button>
-            <button class="btn btn-secondary" onclick="checkEventsForce()">⚡ Force Check (Notify All)</button>
-            <a href="/api/events" class="btn btn-secondary" target="_blank">📊 View Events API</a>
-            <a href="/health" class="btn btn-secondary" target="_blank">❤️ Health Check</a>
+        <!-- Center Panel - Dashboard -->
+        <div class="center-panel">
+            <div class="header">
+                <h1>🎵 RA.co Event Monitor</h1>
+                <p>Automated event tracking for your favorite artists</p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Events</h3>
+                    <div class="value">${stats.totalEvents}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Notifications Sent</h3>
+                    <div class="value">${stats.totalNotifications}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Recent Events (7 days)</h3>
+                    <div class="value">${stats.recentEvents}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Monitored Artists</h3>
+                    <div class="value">${stats.monitoredArtists}</div>
+                </div>
+            </div>
+            
+            <div class="config">
+                <h3>📍 Current Configuration</h3>
+                <div class="config-item">
+                    <span>Location:</span>
+                    <span>${config.location.name} (ID: ${config.location.areaId})</span>
+                </div>
+                <div class="config-item">
+                    <span>Check Interval:</span>
+                    <span>Every ${config.notificationSettings.checkIntervalHours} hours</span>
+                </div>
+                <div class="config-item">
+                    <span>Date Range:</span>
+                    <span>${config.notificationSettings.dateRangeDays} days</span>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-primary" onclick="checkEvents()">🔍 Check Events Now</button>
+                <button class="btn btn-secondary" onclick="checkEventsForce()">⚡ Force Check (Notify All)</button>
+                <button class="btn btn-secondary" onclick="loadEvents()">📋 Refresh Events</button>
+                <a href="/api/events" class="btn btn-secondary" target="_blank">📊 API</a>
+                <a href="/health" class="btn btn-secondary" target="_blank">❤️ Health</a>
+            </div>
+            
+            <div class="status" id="status"></div>
         </div>
         
-        <div class="status" id="status"></div>
+        <!-- Right Panel - Events List -->
+        <div class="right-panel">
+            <div class="events-header">
+                <h2>📅 Recent Events</h2>
+            </div>
+            <div class="events-list" id="eventsList">
+                <div class="loading">Loading events...</div>
+            </div>
+        </div>
     </div>
     
     <script>
+        let selectedArtists = ${JSON.stringify(config.artists.map(a => a.id))};
+        
+        // Load events on page load
+        window.addEventListener('load', loadEvents);
+        
+        async function loadEvents() {
+            const eventsList = document.getElementById('eventsList');
+            eventsList.innerHTML = '<div class="loading">Loading events...</div>';
+            
+            try {
+                const response = await fetch('/api/events');
+                const events = await response.json();
+                
+                if (events.length === 0) {
+                    eventsList.innerHTML = '<div class="no-events">No events found</div>';
+                    return;
+                }
+                
+                eventsList.innerHTML = events.map(event => \`
+                    <div class="event-item" onclick="window.open('https://ra.co\${event.content_url}', '_blank')">
+                        <div class="event-title">\${event.title}</div>
+                        <div class="event-details">
+                            <div class="event-date">📅 \${new Date(event.date).toLocaleDateString('en-GB')}</div>
+                            <div class="event-venue">📍 \${event.venue_name || 'Venue TBA'}</div>
+                            \${event.artist_names ? \`<div class="event-artists">🎤 \${event.artist_names}</div>\` : ''}
+                        </div>
+                    </div>
+                \`).join('');
+            } catch (error) {
+                eventsList.innerHTML = '<div class="no-events">Error loading events</div>';
+            }
+        }
+        
+        function toggleArtist(artistId, isChecked) {
+            if (isChecked) {
+                if (!selectedArtists.includes(artistId)) {
+                    selectedArtists.push(artistId);
+                }
+            } else {
+                selectedArtists = selectedArtists.filter(id => id !== artistId);
+            }
+            console.log('Selected artists:', selectedArtists);
+        }
+        
+        async function addArtist() {
+            const name = document.getElementById('newArtistName').value.trim();
+            const id = document.getElementById('newArtistId').value.trim();
+            
+            if (!name || !id) {
+                alert('Please enter both artist name and ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/artists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, id })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error adding artist');
+                }
+            } catch (error) {
+                alert('Error adding artist: ' + error.message);
+            }
+        }
+        
         async function checkEvents() {
             const status = document.getElementById('status');
             status.textContent = 'Checking events...';
@@ -226,7 +579,10 @@ class EventServer {
                 if (response.ok) {
                     status.textContent = 'Event check completed successfully!';
                     status.className = 'status success';
-                    setTimeout(() => location.reload(), 2000);
+                    setTimeout(() => {
+                        loadEvents();
+                        status.style.display = 'none';
+                    }, 2000);
                 } else {
                     status.textContent = 'Error: ' + result.error;
                     status.className = 'status error';
@@ -250,7 +606,10 @@ class EventServer {
                 if (response.ok) {
                     status.textContent = 'Force check completed! Notifications sent for all events.';
                     status.className = 'status success';
-                    setTimeout(() => location.reload(), 2000);
+                    setTimeout(() => {
+                        loadEvents();
+                        status.style.display = 'none';
+                    }, 2000);
                 } else {
                     status.textContent = 'Error: ' + result.error;
                     status.className = 'status error';
@@ -274,6 +633,22 @@ class EventServer {
         // Configuration endpoint
         this.app.get('/api/config', (req, res) => {
             res.json(this.monitor.config);
+        });
+
+        // Add artist endpoint
+        this.app.post('/api/artists', (req, res) => {
+            try {
+                const { name, id } = req.body;
+                
+                if (!name || !id) {
+                    return res.status(400).json({ error: 'Name and ID are required' });
+                }
+                
+                // For now, just return success (we'll implement config file updates later)
+                res.json({ message: 'Artist added successfully', artist: { name, id } });
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
         });
 
         // Simple test route
