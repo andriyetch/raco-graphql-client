@@ -68,11 +68,20 @@ class EventServer {
 
         this.app.get('/api/events', async (req, res) => {
             try {
-                const { start, end } = req.query;
+                const { start, end, artists } = req.query;
                 const startDate = start || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
                 const endDate = end || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
                 
-                const events = await this.db.getEventsByDateRange(startDate, endDate);
+                let events;
+                if (artists) {
+                    // Filter by selected artists and location
+                    const artistIds = artists.split(',');
+                    events = await this.db.getEventsByDateRangeAndArtists(startDate, endDate, artistIds, this.monitor.config.location.areaId);
+                } else {
+                    // Get all events (for backward compatibility)
+                    events = await this.db.getEventsByDateRange(startDate, endDate);
+                }
+                
                 res.json(events);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -525,13 +534,19 @@ class EventServer {
             eventsList.innerHTML = '<div class="loading">Loading events...</div>';
             
             try {
-                const response = await fetch('/api/events');
+                // Build query parameters with selected artists
+                const params = new URLSearchParams();
+                if (selectedArtists && selectedArtists.length > 0) {
+                    params.append('artists', selectedArtists.join(','));
+                }
+                
+                const response = await fetch(\`/api/events?\${params.toString()}\`);
                 const events = await response.json();
                 
-                console.log('Loaded events:', events);
+                console.log('Loaded events for artists:', selectedArtists, 'Events:', events);
                 
                 if (!events || events.length === 0) {
-                    eventsList.innerHTML = '<div class="no-events">No events found</div>';
+                    eventsList.innerHTML = '<div class="no-events">No events found for selected artists</div>';
                     return;
                 }
                 
@@ -560,6 +575,9 @@ class EventServer {
                 selectedArtists = selectedArtists.filter(id => id !== artistId);
             }
             console.log('Selected artists:', selectedArtists);
+            
+            // Reload events when artists are toggled
+            loadEvents();
         }
         
         async function addArtist() {

@@ -31,6 +31,7 @@ class Database {
                 end_time TEXT,
                 venue_name TEXT,
                 venue_id TEXT,
+                venue_area_id TEXT,
                 content_url TEXT,
                 attending INTEGER DEFAULT 0,
                 is_ticketed BOOLEAN,
@@ -110,9 +111,9 @@ class Database {
     async saveEvent(event) {
         const eventSql = `
             INSERT OR REPLACE INTO events (
-                id, title, date, start_time, end_time, venue_name, venue_id, 
+                id, title, date, start_time, end_time, venue_name, venue_id, venue_area_id,
                 content_url, attending, is_ticketed, queue_it_enabled, new_event_form, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         `;
 
         const eventParams = [
@@ -123,6 +124,7 @@ class Database {
             event.endTime,
             event.venue?.name,
             event.venue?.id,
+            event.venue?.area?.id,
             event.contentUrl,
             event.attending || event.interestedCount || 0,
             event.isTicketed,
@@ -169,6 +171,22 @@ class Database {
             ORDER BY e.date ASC
         `;
         return await this.all(sql, [startDate, endDate]);
+    }
+
+    async getEventsByDateRangeAndArtists(startDate, endDate, artistIds, areaId) {
+        const sql = `
+            SELECT e.*, GROUP_CONCAT(ea.artist_name) as artist_names
+            FROM events e
+            INNER JOIN event_artists ea ON e.id = ea.event_id
+            WHERE e.date BETWEEN ? AND ?
+            AND ea.artist_id IN (${artistIds.map(() => '?').join(',')})
+            AND e.venue_area_id = ?
+            GROUP BY e.id
+            ORDER BY e.date ASC
+        `;
+        
+        const params = [startDate, endDate, ...artistIds, areaId];
+        return await this.all(sql, params);
     }
 
     async hasNotificationBeenSent(eventId) {
