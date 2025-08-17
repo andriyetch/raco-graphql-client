@@ -70,12 +70,12 @@ class NotificationService {
         return await this.sendNotification(title, message);
     }
 
-    async sendBatchNotification(events) {
+    async sendBatchNotification(events, locationName = 'Unknown Location') {
         if (events.length === 0) return;
 
-        const title = `🎵 ${events.length} New Event${events.length > 1 ? 's' : ''} Found!`;
+        const title = `🎵 ${events.length} Event${events.length > 1 ? 's' : ''} Found in ${locationName}!`;
         
-        let message = `Found ${events.length} new event${events.length > 1 ? 's' : ''} for your monitored artists:\n\n`;
+        let message = `Found ${events.length} event${events.length > 1 ? 's' : ''} for your monitored artists in ${locationName}:\n\n`;
         
         events.forEach((event, index) => {
             const date = new Date(event.date);
@@ -85,11 +85,15 @@ class NotificationService {
             });
             
             message += `${index + 1}. ${event.title}\n`;
-            message += `   ${formattedDate} - ${event.venue_name || 'Venue TBA'}\n`;
+            message += `   📅 ${formattedDate} - 📍 ${event.venue_name || 'Venue TBA'}\n`;
+            
+            // Show which monitored artists are involved
             if (event.artist_names) {
-                message += `   ${event.artist_names}\n`;
+                const artistNames = event.artist_names.split(',').map(name => name.trim());
+                message += `   🎤 Artists: ${artistNames.join(', ')}\n`;
             }
-            message += `   https://ra.co${event.content_url}\n\n`;
+            
+            message += `   🔗 https://ra.co${event.content_url}\n\n`;
         });
 
         return await this.sendNotification(title, message, 1); // Higher priority for batch notifications

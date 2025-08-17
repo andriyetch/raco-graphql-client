@@ -121,7 +121,7 @@ class EventMonitor {
             
             try {
                 // Send batch notification
-                await this.notificationService.sendBatchNotification(allNewEvents);
+                await this.notificationService.sendBatchNotification(allNewEvents, this.config.location.name);
                 
                 // Mark events as notified
                 for (const event of allNewEvents) {
@@ -176,21 +176,25 @@ class EventMonitor {
                     await this.db.saveEvent(event);
                 }
                 
-                // Get ALL events for this artist (not just new ones)
-                const artistEvents = await this.db.getEventsByDateRange(dateRange.start, dateRange.end);
-                const filteredEvents = artistEvents.filter(event => {
-                    // Check if this event has artists that match our artist ID
-                    const eventArtists = event.artist_names ? event.artist_names.split(',') : [];
-                    return eventArtists.some(artistName => 
-                        this.config.artists.some(configArtist => 
-                            configArtist.id === artistId && 
-                            configArtist.name.toLowerCase().includes(artistName.trim().toLowerCase())
-                        )
-                    );
+                // For manual check, we need to filter by area after fetching
+                // The events are already filtered by area in the EventFetcher, but let's double-check
+                const fetchedEvents = await eventFetcher.fetchEventsWithPageLimit(5); // Fetch up to 5 pages
+                console.log(`Found ${fetchedEvents.length} events for ${artistName}`);
+                
+                // Save events to database
+                for (const event of fetchedEvents) {
+                    await this.db.saveEvent(event);
+                }
+                
+                // Filter events by area (same logic as in EventFetcher.saveEventsToJson)
+                const filteredEvents = fetchedEvents.filter(event => {
+                    const eventData = event.event || event;
+                    const eventAreaId = eventData.venue?.area?.id;
+                    return eventAreaId && eventAreaId === this.config.location.areaId.toString();
                 });
                 
                 if (filteredEvents.length > 0) {
-                    console.log(`Found ${filteredEvents.length} events for ${artistName} (including previously notified)`);
+                    console.log(`Found ${filteredEvents.length} events for ${artistName} in ${this.config.location.name}`);
                     allEvents.push(...filteredEvents);
                 }
                 
@@ -211,7 +215,7 @@ class EventMonitor {
             
             try {
                 // Send batch notification
-                await this.notificationService.sendBatchNotification(allEvents);
+                await this.notificationService.sendBatchNotification(allEvents, this.config.location.name);
                 
                 // Mark events as notified (even if they were notified before)
                 for (const event of allEvents) {

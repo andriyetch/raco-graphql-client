@@ -153,10 +153,10 @@ class EventServer {
     async start() {
         await this.init();
         
-        this.app.listen(this.port, () => {
+        this.app.listen(this.port, '0.0.0.0', () => {
             console.log(`🚀 Server running on port ${this.port}`);
-            console.log(`📊 Dashboard available at http://localhost:${this.port}`);
-            console.log(`🔍 Health check at http://localhost:${this.port}/health`);
+            console.log(`📊 Dashboard available at http://0.0.0.0:${this.port}`);
+            console.log(`🔍 Health check at http://0.0.0.0:${this.port}/health`);
         });
     }
 
