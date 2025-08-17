@@ -84,16 +84,23 @@ class NotificationService {
                 day: 'numeric'
             });
             
-            message += `${index + 1}. ${event.title}\n`;
-            message += `   📅 ${formattedDate} - 📍 ${event.venue_name || 'Venue TBA'}\n`;
+            // Handle both database records and raw event objects
+            const eventData = event.event || event;
+            const venueName = event.venue_name || eventData.venue?.name || 'Venue TBA';
+            const contentUrl = event.content_url || eventData.contentUrl || '';
+            const artistNames = event.artist_names || 
+                (eventData.artists ? eventData.artists.map(a => a.name).join(', ') : '');
+            
+            message += `${index + 1}. ${eventData.title}\n`;
+            message += `   📅 ${formattedDate} - 📍 ${venueName}\n`;
             
             // Show which monitored artists are involved
-            if (event.artist_names) {
-                const artistNames = event.artist_names.split(',').map(name => name.trim());
-                message += `   🎤 Artists: ${artistNames.join(', ')}\n`;
+            if (artistNames) {
+                const artists = artistNames.split(',').map(name => name.trim());
+                message += `   🎤 Artists: ${artists.join(', ')}\n`;
             }
             
-            message += `   🔗 https://ra.co${event.content_url}\n\n`;
+            message += `   🔗 https://ra.co${contentUrl}\n\n`;
         });
 
         return await this.sendNotification(title, message, 1); // Higher priority for batch notifications
