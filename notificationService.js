@@ -94,10 +94,14 @@ class NotificationService {
             message += `${index + 1}. ${eventData.title}\n`;
             message += `   📅 ${formattedDate} - 📍 ${venueName}\n`;
             
-            // Show which monitored artists are involved
+            // Show which monitored artists are involved (limit to 5)
             if (artistNames) {
                 const artists = artistNames.split(',').map(name => name.trim());
-                message += `   🎤 Artists: ${artists.join(', ')}\n`;
+                let artistDisplay = artists.slice(0, 5).join(', ');
+                if (artists.length > 5) {
+                    artistDisplay += ', and more';
+                }
+                message += `   🎤 Artists: ${artistDisplay}\n`;
             }
             
             message += `   🔗 https://ra.co${contentUrl}\n\n`;
