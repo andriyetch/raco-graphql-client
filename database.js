@@ -64,6 +64,28 @@ class Database {
         for (const table of tables) {
             await this.run(table);
         }
+        
+        // Add venue_area_id column if it doesn't exist
+        await this.addVenueAreaIdColumn();
+    }
+
+    async addVenueAreaIdColumn() {
+        try {
+            // Check if venue_area_id column exists
+            const result = await this.get("PRAGMA table_info(events)");
+            const columns = await this.all("PRAGMA table_info(events)");
+            const hasVenueAreaId = columns.some(col => col.name === 'venue_area_id');
+            
+            if (!hasVenueAreaId) {
+                console.log('Adding venue_area_id column to events table...');
+                await this.run('ALTER TABLE events ADD COLUMN venue_area_id TEXT');
+                console.log('venue_area_id column added successfully');
+            } else {
+                console.log('venue_area_id column already exists');
+            }
+        } catch (error) {
+            console.error('Error adding venue_area_id column:', error);
+        }
     }
 
     async run(sql, params = []) {
@@ -109,14 +131,15 @@ class Database {
     }
 
     async saveEvent(event) {
-        const eventSql = `
+        // Try with venue_area_id first, fallback to without it
+        let eventSql = `
             INSERT OR REPLACE INTO events (
                 id, title, date, start_time, end_time, venue_name, venue_id, venue_area_id,
                 content_url, attending, is_ticketed, queue_it_enabled, new_event_form, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         `;
 
-        const eventParams = [
+        let eventParams = [
             event.id,
             event.title,
             event.date,
@@ -132,7 +155,39 @@ class Database {
             event.newEventForm
         ];
 
-        await this.run(eventSql, eventParams);
+        try {
+            await this.run(eventSql, eventParams);
+        } catch (error) {
+            if (error.code === 'SQLITE_ERROR' && error.message.includes('venue_area_id')) {
+                console.log('Falling back to save without venue_area_id column');
+                // Fallback to old schema without venue_area_id
+                eventSql = `
+                    INSERT OR REPLACE INTO events (
+                        id, title, date, start_time, end_time, venue_name, venue_id,
+                        content_url, attending, is_ticketed, queue_it_enabled, new_event_form, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                `;
+
+                eventParams = [
+                    event.id,
+                    event.title,
+                    event.date,
+                    event.startTime,
+                    event.endTime,
+                    event.venue?.name,
+                    event.venue?.id,
+                    event.contentUrl,
+                    event.attending || event.interestedCount || 0,
+                    event.isTicketed,
+                    event.queueItEnabled,
+                    event.newEventForm
+                ];
+
+                await this.run(eventSql, eventParams);
+            } else {
+                throw error;
+            }
+        }
 
         // Save artists for this event
         if (event.artists && event.artists.length > 0) {
