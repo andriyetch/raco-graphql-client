@@ -9,13 +9,25 @@
       "name": "Rival Consoles"
     },
     {
-      "id": "1013", 
+      "id": "1013",
       "name": "Seth Troxler"
+    },
+    {
+      "id": "94364",
+      "name": "Fred again.."
+    },
+    {
+      "id": "14634",
+      "name": "Skepta"
+    },
+    {
+      "id": "9311",
+      "name": "DVS1"
     }
   ],
   "notificationSettings": {
     "checkIntervalHours": 3,
-    "dateRangeDays": 30,
+    "dateRangeDays": 365,
     "includePastDay": true
   }
 }

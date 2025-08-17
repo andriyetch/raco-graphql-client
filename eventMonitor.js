@@ -84,7 +84,7 @@ class EventMonitor {
                     dateRange.end
                 );
                 
-                const events = await eventFetcher.fetchEventsWithPageLimit(5); // Fetch up to 5 pages
+                const events = await eventFetcher.fetchAllEvents(); // Fetch all available pages
                 console.log(`Found ${events.length} events for ${artistName}`);
                 
                 // Save events to database
@@ -168,7 +168,7 @@ class EventMonitor {
                     dateRange.end
                 );
                 
-                const events = await eventFetcher.fetchEventsWithPageLimit(5); // Fetch up to 5 pages
+                const events = await eventFetcher.fetchAllEvents(); // Fetch all available pages
                 console.log(`Found ${events.length} events for ${artistName}`);
                 
                 // Save events to database
@@ -178,7 +178,7 @@ class EventMonitor {
                 
                 // For manual check, we need to filter by area after fetching
                 // The events are already filtered by area in the EventFetcher, but let's double-check
-                const fetchedEvents = await eventFetcher.fetchEventsWithPageLimit(5); // Fetch up to 5 pages
+                const fetchedEvents = await eventFetcher.fetchAllEvents(); // Fetch all available pages
                 console.log(`Found ${fetchedEvents.length} events for ${artistName}`);
                 
                 // Save events to database
@@ -260,7 +260,7 @@ class EventMonitor {
                     dateRange.end
                 );
                 
-                const events = await eventFetcher.fetchEventsWithPageLimit(5);
+                const events = await eventFetcher.fetchAllEvents(); // Fetch all available pages
                 console.log(`Found ${events.length} events for ${artistName}`);
                 
                 // Save events to database
@@ -340,7 +340,7 @@ class EventMonitor {
                     dateRange.end
                 );
                 
-                const fetchedEvents = await eventFetcher.fetchEventsWithPageLimit(5);
+                const fetchedEvents = await eventFetcher.fetchAllEvents(); // Fetch all available pages
                 console.log(`Found ${fetchedEvents.length} events for ${artistName}`);
                 
                 // Save events to database
