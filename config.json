@@ -1,0 +1,21 @@
+{
+  "location": {
+    "areaId": 13,
+    "name": "London"
+  },
+  "artists": [
+    {
+      "id": "44361",
+      "name": "Rival Consoles"
+    },
+    {
+      "id": "1013", 
+      "name": "Seth Troxler"
+    }
+  ],
+  "notificationSettings": {
+    "checkIntervalHours": 3,
+    "dateRangeDays": 30,
+    "includePastDay": true
+  }
+}
