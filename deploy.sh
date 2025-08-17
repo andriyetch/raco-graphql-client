@@ -11,10 +11,9 @@ set -e
 echo "🚀 RA.co Event Monitor Deployment Script"
 echo "========================================"
 
-# Check if running as root
+# Check if running as root (optional warning)
 if [[ $EUID -eq 0 ]]; then
-   echo "❌ This script should not be run as root"
-   exit 1
+   echo "⚠️  Running as root user (this is fine for DigitalOcean droplets)"
 fi
 
 # Update system
@@ -43,7 +42,12 @@ echo "📦 Installing SQLite..."
 sudo apt install -y sqlite3
 
 # Create application directory
-APP_DIR="$HOME/ra-event-monitor"
+if [[ $EUID -eq 0 ]]; then
+    APP_DIR="/root/ra-event-monitor"
+else
+    APP_DIR="$HOME/ra-event-monitor"
+fi
+
 echo "📁 Setting up application directory: $APP_DIR"
 
 if [ ! -d "$APP_DIR" ]; then
