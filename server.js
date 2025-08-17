@@ -95,8 +95,17 @@ class EventServer {
         // Manual trigger endpoint (normal - only new events)
         this.app.post('/api/check-events', async (req, res) => {
             try {
-                console.log('🔄 Manual event check triggered via API');
-                await this.monitor.checkForNewEvents();
+                const { selectedArtists } = req.body;
+                console.log('🔄 Manual event check triggered via API with artists:', selectedArtists);
+                
+                if (selectedArtists && selectedArtists.length > 0) {
+                    // Use selected artists for this check
+                    await this.monitor.checkForNewEventsWithArtists(selectedArtists);
+                } else {
+                    // Use all artists if none selected
+                    await this.monitor.checkForNewEvents();
+                }
+                
                 res.json({ message: 'Event check completed' });
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -106,8 +115,17 @@ class EventServer {
         // Manual trigger endpoint (force - all events)
         this.app.post('/api/check-events-force', async (req, res) => {
             try {
-                console.log('🔄 Force manual event check triggered via API (will notify for all events)');
-                await this.monitor.checkForNewEventsManual();
+                const { selectedArtists } = req.body;
+                console.log('🔄 Force manual event check triggered via API with artists:', selectedArtists);
+                
+                if (selectedArtists && selectedArtists.length > 0) {
+                    // Use selected artists for this check
+                    await this.monitor.checkForNewEventsManualWithArtists(selectedArtists);
+                } else {
+                    // Use all artists if none selected
+                    await this.monitor.checkForNewEventsManual();
+                }
+                
                 res.json({ message: 'Force event check completed - notifications sent for all events' });
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -337,11 +355,12 @@ class EventServer {
             font-size: 18px;
         }
         
-        .events-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-        }
+                 .events-list {
+             flex: 1;
+             overflow-y: auto;
+             padding: 0;
+             max-height: calc(100vh - 80px);
+         }
         
         .event-item {
             padding: 15px 20px;
@@ -509,7 +528,9 @@ class EventServer {
                 const response = await fetch('/api/events');
                 const events = await response.json();
                 
-                if (events.length === 0) {
+                console.log('Loaded events:', events);
+                
+                if (!events || events.length === 0) {
                     eventsList.innerHTML = '<div class="no-events">No events found</div>';
                     return;
                 }
@@ -525,7 +546,8 @@ class EventServer {
                     </div>
                 \`).join('');
             } catch (error) {
-                eventsList.innerHTML = '<div class="no-events">Error loading events</div>';
+                console.error('Error loading events:', error);
+                eventsList.innerHTML = '<div class="no-events">Error loading events: ' + error.message + '</div>';
             }
         }
         
@@ -573,7 +595,12 @@ class EventServer {
             status.style.display = 'block';
             
             try {
-                const response = await fetch('/api/check-events', { method: 'POST' });
+                // Send selected artists with the request
+                const response = await fetch('/api/check-events', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ selectedArtists })
+                });
                 const result = await response.json();
                 
                 if (response.ok) {
@@ -600,7 +627,12 @@ class EventServer {
             status.style.display = 'block';
             
             try {
-                const response = await fetch('/api/check-events-force', { method: 'POST' });
+                // Send selected artists with the request
+                const response = await fetch('/api/check-events-force', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ selectedArtists })
+                });
                 const result = await response.json();
                 
                 if (response.ok) {
@@ -646,6 +678,16 @@ class EventServer {
                 
                 // For now, just return success (we'll implement config file updates later)
                 res.json({ message: 'Artist added successfully', artist: { name, id } });
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        // Get selected artists endpoint
+        this.app.get('/api/selected-artists', (req, res) => {
+            try {
+                // For now, return all artists (we'll implement filtering later)
+                res.json(this.monitor.config.artists);
             } catch (error) {
                 res.status(500).json({ error: error.message });
             }
