@@ -69,8 +69,11 @@ class EventServer {
         this.app.get('/api/events', async (req, res) => {
             try {
                 const { start, end, artists } = req.query;
-                const startDate = start || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-                const endDate = end || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                
+                // Use config date range if not provided, or fallback to reasonable defaults
+                const configDateRange = this.monitor.getDateRange();
+                const startDate = start || configDateRange.start;
+                const endDate = end || configDateRange.end;
                 
                 console.log('API /api/events called with:', { startDate, endDate, artists });
                 
@@ -545,11 +548,22 @@ class EventServer {
             eventsList.innerHTML = '<div class="loading">Loading events...</div>';
             
             try {
-                // Build query parameters with selected artists
+                // Build query parameters with selected artists and proper date range
                 const params = new URLSearchParams();
                 if (selectedArtists && selectedArtists.length > 0) {
                     params.append('artists', selectedArtists.join(','));
                 }
+                
+                // Use the same date range as the notification system (365 days)
+                const now = new Date();
+                const startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - 1); // Include past day
+                
+                const endDate = new Date(now);
+                endDate.setDate(endDate.getDate() + 365); // 365 days into future
+                
+                params.append('start', startDate.toISOString());
+                params.append('end', endDate.toISOString());
                 
                 const response = await fetch(\`/api/events?\${params.toString()}\`);
                 
